@@ -1,0 +1,120 @@
+{
+  "n_items": 10,
+  "unanimous_rate": 0.5,
+  "majority_3_of_4_rate": 0.5,
+  "tie_2_2_rate": 0.0,
+  "no_majority_rate": 0.0,
+  "per_model_agreement_with_consensus": {
+    "openai": 0.9,
+    "deepseek": 1.0,
+    "claude": 1.0,
+    "qwen": 0.6
+  },
+  "agreement_by_class": {
+    "depression": {
+      "n_items": 5,
+      "unanimous_rate": 0.8,
+      "tie_rate": 0.0
+    },
+    "neutral": {
+      "n_items": 5,
+      "unanimous_rate": 0.2,
+      "tie_rate": 0.0
+    }
+  },
+  "cross_trial_consensus_stability_rate": null,
+  "per_model_cross_trial_stability": {
+    "openai": null,
+    "deepseek": null,
+    "claude": null,
+    "qwen": null
+  },
+  "per_model_round_changes": {
+    "openai": {
+      "changes": 0,
+      "valid_comparisons": 20,
+      "change_rate": 0.0,
+      "by_transition": {
+        "1_to_2": {
+          "changes": 0,
+          "valid_comparisons": 10,
+          "change_rate": 0.0
+        },
+        "2_to_3": {
+          "changes": 0,
+          "valid_comparisons": 10,
+          "change_rate": 0.0
+        }
+      }
+    },
+    "deepseek": {
+      "changes": 0,
+      "valid_comparisons": 20,
+      "change_rate": 0.0,
+      "by_transition": {
+        "1_to_2": {
+          "changes": 0,
+          "valid_comparisons": 10,
+          "change_rate": 0.0
+        },
+        "2_to_3": {
+          "changes": 0,
+          "valid_comparisons": 10,
+          "change_rate": 0.0
+        }
+      }
+    },
+    "claude": {
+      "changes": 1,
+      "valid_comparisons": 20,
+      "change_rate": 0.05,
+      "by_transition": {
+        "1_to_2": {
+          "changes": 1,
+          "valid_comparisons": 10,
+          "change_rate": 0.1
+        },
+        "2_to_3": {
+          "changes": 0,
+          "valid_comparisons": 10,
+          "change_rate": 0.0
+        }
+      }
+    },
+    "qwen": {
+      "changes": 5,
+      "valid_comparisons": 20,
+      "change_rate": 0.25,
+      "by_transition": {
+        "1_to_2": {
+          "changes": 2,
+          "valid_comparisons": 10,
+          "change_rate": 0.2
+        },
+        "2_to_3": {
+          "changes": 3,
+          "valid_comparisons": 10,
+          "change_rate": 0.3
+        }
+      }
+    }
+  },
+  "fleiss_kappa": 0.5824634655532359,
+  "krippendorff_alpha": null,
+  "reproducibility": {
+    "timestamp_utc": "2026-10-07T04:55:27.837539+00:00",
+    "python_version": "3.14.2",
+    "platform": "Linux-6.8.0-1064-azure-x86_64-with-glibc2.39",
+    "trials": 1,
+    "debate_rounds": 2,
+    "total_rounds": 3,
+    "models_run": [
+      "openai",
+      "deepseek",
+      "claude",
+      "qwen"
+    ],
+    "n_items": 10,
+    "dataset_dir": "/workspaces/consensus-model-test/data"
+  }
+}

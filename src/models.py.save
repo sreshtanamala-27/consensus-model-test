@@ -1,0 +1,127 @@
+"""
+models.py
+
+One function per model, all with the same signature:
+
+    call_x(post_text: str) -> dict:
+        {
+            "model": "openai" | "deepseek" | "claude" | "qwen",
+            "raw_response": "<exact text the model returned, or None on error>",
+            "error": "<error message, or None if the call succeeded>",
+        }
+
+Every model receives the EXACT same prompt (see PROMPT_TEMPLATE below) and
+is given no definition of what "Low / Medium / High Risk" means. That's a
+deliberate experimental constraint: the goal is to measure each model's
+own, pre-existing interpretation of the categories, not to train them
+toward a shared definition first.
+"""
+
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+PROMPT_TEMPLATE = """Read the following text and classify it into exactly one \
+of these three categories: Low Risk, Medium Risk, High Risk.
+
+Respond with only the category name and nothing else — no explanation, \
+no punctuation, no extra words.
+
+Text:
+\"\"\"{post}\"\"\"
+"""
+
+
+def _build_prompt(post: str) -> str:
+    return PROMPT_TEMPLATE.format(post=post)
+
+
+def call_openai(post: str) -> dict:
+    from openai import OpenAI
+
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    try:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": _build_prompt(post)}],
+        )
+        text = resp.choices[0].message.content.strip()
+        return {"model": "openai", "raw_response": text, "error": None}
+    except Exception as e:  # noqa: BLE001 - we want to record any failure and keep going
+        return {"model": "openai", "raw_response": None, "error": str(e)}
+
+
+def call_deepseek(post: str) -> dict:
+    # DeepSeek's API is OpenAI-compatible, so we reuse the OpenAI SDK with a
+    # different base_url and key.
+    from openai import OpenAI
+
+    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    try:
+        client = OpenAI(
+            api_key=os.getenv("DEEPSEEK_API_KEY"),
+            base_url="https://api.deepseek.com",
+        )
+        resp = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": _build_prompt(post)}],
+        )
+        text = resp.choices[0].message.content.strip()
+        return {"model": "deepseek", "raw_response": text, "error": None}
+    except Exception as e:  # noqa: BLE001
+        return {"model": "deepseek", "raw_response": None, "error": str(e)}
+
+
+def call_claude(post: str) -> dict:
+    import anthropic
+
+    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+    try:
+        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        resp = client.messages.create(
+            model=model,
+            max_tokens=20,
+            messages=[{"role": "user", "content": _build_prompt(post)}],
+        )
+        text = "".join(
+            block.text for block in resp.content if block.type == "text"
+        ).strip()
+        return {"model": "claude", "raw_response": text, "error": None}
+    except Exception as e:  # noqa: BLE001
+        return {"model": "claude", "raw_response": None, "error": str(e)}
+
+
+def call_qwen(post: str) -> dict:
+    # Qwen runs locally through Ollama — no API key required.
+    import requests
+
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    model = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+    try:
+        resp = requests.post(
+            f"{base_url}/api/generate",
+            json={
+                "model": model,
+                "prompt": _build_prompt(post),
+                "stream": False,
+                "options": {"temperature": 0},
+            },
+            timeout=120,
+        )
+        resp.raise_for_status()
+        text = resp.json().get("response", "").strip()
+        return {"model": "qwen", "raw_response": text, "error": None}
+    except Exception as e:  # noqa: BLE001
+        return {"model": "qwen", "raw_response": None, "error": str(e)}
+
+
+# Registry used by run.py so models can be selected/skipped by name from the CLI.
+MODEL_FUNCS = {
+    "openai": call_openai,
+    "deepseek": call_deepseek,
+    "claude": call_claude,
+    "qwen": call_qwen,
+}
